@@ -1,0 +1,34 @@
+.mainContainer {
+    width: 100%;
+    height: fit-content;
+    background: linear-gradient(45deg, #ffffff, #f0f0f0);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.TitleContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.title {
+    color: black;
+    font-family: "inter", sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+    text-align: center;
+}
+
+.subtitle {
+    color: rgba(0, 0, 0, 0.5);
+    font-family: "inter", sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 20px;
+}
+

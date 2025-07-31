@@ -1,0 +1,15 @@
+.PpmCostingSummaryContainer {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 50px;
+}
+
+.PpmCostingSummaryTitle {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}

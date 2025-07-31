@@ -1,0 +1,21 @@
+.BuildingInformationContainer {
+    /* background-color: red; */
+    width: 300px;
+    min-height: 100dvh;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.BuildingInformationTitle {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.BuildingInformationInput {
+    margin-bottom: 20px;
+}
+
