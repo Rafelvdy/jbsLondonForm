@@ -29,3 +29,20 @@
     font-weight: 600;
     color: red;
 }
+
+.MechanicalSystemFormInputContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 20px;
+}
+
+.RadioGroup {
+    display: flex;
+    margin-top: 20px;
+}
+
+.RadioGroupItem {
+    display: flex;
+}

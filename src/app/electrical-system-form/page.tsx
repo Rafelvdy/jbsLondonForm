@@ -36,7 +36,7 @@ const ElectricalSystemForm = () => {
                     router.push("..")
                 }}>X</button>
             </div>
-            <h1 className={styles.MechanicalSystemFormTitle}>Mechanical System Form</h1>
+            <h1 className={styles.MechanicalSystemFormTitle}>Electrical System Form</h1>
             <Combobox 
                 systems={systems}
                 value={selectedSystem}

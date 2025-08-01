@@ -5,6 +5,8 @@ import { useState } from "react";
 import { Input } from "@/components/input";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const ComplianceOtherSystemsForms = () => {
     const router = useRouter();
@@ -34,7 +36,7 @@ const ComplianceOtherSystemsForms = () => {
                     router.push("..")
                 }}>X</button>
             </div>
-            <h1 className={styles.MechanicalSystemFormTitle}>Mechanical System Form</h1>
+            <h1 className={styles.MechanicalSystemFormTitle}>Compliance & Other Systems Form</h1>
             <Combobox 
                 systems={systems}
                 value={selectedSystem}
@@ -42,6 +44,22 @@ const ComplianceOtherSystemsForms = () => {
                 open={isComboboxOpen}
                 onOpenChange={setIsComboboxOpen}
             />
+            {hasSelection && (
+                <div className={styles.MechanicalSystemFormInputContainer}>
+                    <RadioGroup defaultValue="yes" className={styles.RadioGroup}>
+                        <div className={styles.RadioGroupItem}>
+                            <RadioGroupItem value="yes" id="yes" />
+                            <Label htmlFor="yes">Yes</Label>
+                        </div>
+                        <div className={styles.RadioGroupItem}>
+                            <RadioGroupItem value="no" id="no" />
+                            <Label htmlFor="no">No</Label>
+                        </div>
+                    </RadioGroup>
+                    <Input type="date" placeholder="Last Inspection Date" />
+                    <Textarea placeholder="Notes" />
+                </div>
+            )}
         </main>
     )
 }
