@@ -1,5 +1,3 @@
-import { LargeNumberLike } from "crypto";
-
 
 export interface BuildingInfo {
     siteName: string;
@@ -25,11 +23,21 @@ export interface SystemBase {
 }
 
 export interface MechanicalSystem extends SystemBase {}
+
 export interface ElectricalSystem extends SystemBase {}
-export interface ComplianceSystem extends SystemBase {}
+
+export interface ComplianceSystem {
+    id: string;
+    systemType: string;
+    systemLabel: string;
+    complianceStatus: 'yes' | 'no';
+    lastInspectionDate: string; // ISO date string
+    notes: string;
+    dateAdded: Date;
+}
 
 export interface PPMSummary {
-    taskAssest: string;
+    taskAsset: string;
     frequency: string;
     labourHours: number;
     materials: string;
@@ -43,7 +51,7 @@ export interface FormState {
     mechanicalSystems: MechanicalSystem[];
     electricalSystems: ElectricalSystem[];
     complianceSystems: ComplianceSystem[];
-    ppmSummary: PPMSummary[];
+    ppmSummary: PPMSummary;
     lastModified: Date;
     isDirty: boolean; // tracking if any changes need saving
 }
