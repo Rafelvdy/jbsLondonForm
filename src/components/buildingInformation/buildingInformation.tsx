@@ -11,7 +11,7 @@ const BuildingInformation = () => {
             <Input type="text" placeholder="Surveyed By" className={styles.BuildingInformationInput}/>
             <Input type="text" placeholder="Client Contact" className={styles.BuildingInformationInput}/>
             <Input type="text" placeholder="Building Type (Office / Retail / Mixed):" className={styles.BuildingInformationInput}/>
-            <Input type="text" placeholder="Building Size ( sq ft ):" className={styles.BuildingInformationInput}/>
+            <Input type="number  " placeholder="Building Size ( sq ft ):" className={styles.BuildingInformationInput}/>
         </div>
     )
 }

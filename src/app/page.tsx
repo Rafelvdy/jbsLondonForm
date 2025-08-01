@@ -17,6 +17,9 @@ export default function Home() {
       <ElectricalSystems />
       <ComplianceOtherSystems />
       <PpmCostingSummary />
+
+
+      <button className={styles.SaveButton}>Save</button>
     </main>
   );
 }
