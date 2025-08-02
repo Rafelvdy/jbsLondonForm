@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Input } from "@/components/input";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
+import { useFormContext } from "@/hooks/useFormContext";
 
 const MechanicalSystemForm = () => {
     const router = useRouter();
@@ -16,6 +17,17 @@ const MechanicalSystemForm = () => {
         setSelectedSystem(value);
     };
     
+    const { addMechanicalSystem } = useFormContext();
+    const [formData, setFormData] = useState({
+        quantity: 0,
+        location: '',
+        condition: '',
+        manufacturer: '',
+        model: '',
+        serviceInterval: '',
+        notes: '',
+    })
+
     const systems = [
         { value: "boiler", label: "Boiler(s)" },
         { value: "AC", label: "Chillers / AC Systems" },
@@ -29,6 +41,15 @@ const MechanicalSystemForm = () => {
         { value: "water-tanks", label: "Water Tanks" },
         { value: "expansion-vessel", label: "Expansion Vessel" },
     ]
+
+    const handleSave = () => {
+        addMechanicalSystem({
+            systemType: selectedSystem,
+            systemLabel: systems.find(s => s.value === selectedSystem)?.label || '',
+            ...formData,
+        });
+        router.push("..");
+    }
 
     return (
         <main className={styles.MechanicalSystemFormContainer}>
@@ -47,15 +68,51 @@ const MechanicalSystemForm = () => {
             />
             {hasSelection && (
                 <div className={styles.MechanicalSystemFormInputContainer}>
-                    <Input type="number" placeholder="Quantity" />
-                    <Input type="text" placeholder="Location" />
-                    <Input type="text" placeholder="Condition" />
-                    <Input type="text" placeholder="Manufacturer" />
-                    <Input type="text" placeholder="Model" />
-                    <Input type="text" placeholder="Service Interval" />
-                    <Textarea placeholder="Notes" />
-
+                    <Input 
+                        type="number" 
+                        placeholder="Quantity" 
+                        value={formData.quantity}
+                        onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+                    />
+                    <Input 
+                        type="text" 
+                        placeholder="Location" 
+                        value={formData.location}
+                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    />
+                    <Input 
+                        type="text" 
+                        placeholder="Condition" 
+                        value={formData.condition}
+                        onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+                    />
+                    <Input 
+                        type="text" 
+                        placeholder="Manufacturer" 
+                        value={formData.manufacturer}
+                        onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value })}
+                    />
+                    <Input 
+                        type="text" 
+                        placeholder="Model" 
+                        value={formData.model}
+                        onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    />
+                    <Input 
+                        type="text" 
+                        placeholder="Service Interval" 
+                        value={formData.serviceInterval}
+                        onChange={(e) => setFormData({ ...formData, serviceInterval: e.target.value })}
+                    />
+                    <Textarea 
+                        placeholder="Notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    />
+                    <button onClick={handleSave}>Save</button>
                 </div>
+
+                
             )}
         </main>
     )

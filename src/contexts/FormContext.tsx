@@ -1,4 +1,6 @@
-import { BuildingInfo, FormState, MechanicalSystem, PPMSummary } from "@/types/formTypes";
+"use client";
+import React, { createContext } from 'react';
+import { BuildingInfo, FormState, MechanicalSystem, ElectricalSystem, ComplianceSystem, PPMSummary } from "../types/formTypes";
 
 interface FormContextType {
     state: FormState;
@@ -6,9 +8,16 @@ interface FormContextType {
     addMechanicalSystem: (system: Omit<MechanicalSystem, 'id' | 'dateAdded'>) => void;
     updateMechanicalSystem: (id: string, system: Partial<MechanicalSystem>) => void;
     deleteMechanicalSystem: (id: string) => void;
-    // Similar methods for electrical and compliance systems
+    addElectricalSystem: (system: Omit<ElectricalSystem, 'id' | 'dateAdded'>) => void;
+    updateElectricalSystem: (id: string, system: Partial<ElectricalSystem>) => void;
+    deleteElectricalSystem: (id: string) => void;
+    addComplianceSystem: (system: Omit<ComplianceSystem, 'id' | 'dateAdded'>) => void;
+    updateComplianceSystem: (id: string, system: Partial<ComplianceSystem>) => void;
+    deleteComplianceSystem: (id: string) => void;
     updatePPMSummary: (summary: Partial<PPMSummary>) => void;
     saveToLocalStorage: () => void;
     loadFromLocalStorage: () => void;
     clearForm: () => void;
 }
+
+export const FormContext = createContext<FormContextType | undefined>(undefined);

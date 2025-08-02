@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { useFormContext } from "@/hooks/useFormContext";
+
 
 const ComplianceOtherSystemsForms = () => {
     const router = useRouter();
@@ -29,6 +31,23 @@ const ComplianceOtherSystemsForms = () => {
         { value: "water-treatment-dosing", label: "Water Treatment / Dosing" },
     ]
 
+    const { addComplianceSystem } = useFormContext();
+
+    const [formData, setFormData] = useState({
+        complianceStatus: 'yes' as 'yes' | 'no',
+        lastInspectionDate: '',
+        notes: '',
+    })
+
+    const handleSave = () => {
+        addComplianceSystem({
+            systemType: selectedSystem,
+            systemLabel: systems.find(s => s.value === selectedSystem)?.label || '',
+            ...formData,
+        })
+        router.push("..");
+    }
+
     return (
         <main className={styles.MechanicalSystemFormContainer}>
             <div className={styles.CancelContainer}>
@@ -46,7 +65,11 @@ const ComplianceOtherSystemsForms = () => {
             />
             {hasSelection && (
                 <div className={styles.MechanicalSystemFormInputContainer}>
-                    <RadioGroup defaultValue="yes" className={styles.RadioGroup}>
+                    <RadioGroup 
+                        defaultValue="yes" 
+                        className={styles.RadioGroup}
+                        onValueChange={(value) => setFormData({ ...formData, complianceStatus: value as 'yes' | 'no' })}
+                    >
                         <div className={styles.RadioGroupItem}>
                             <RadioGroupItem value="yes" id="yes" />
                             <Label htmlFor="yes">Yes</Label>
@@ -56,8 +79,18 @@ const ComplianceOtherSystemsForms = () => {
                             <Label htmlFor="no">No</Label>
                         </div>
                     </RadioGroup>
-                    <Input type="date" placeholder="Last Inspection Date" />
-                    <Textarea placeholder="Notes" />
+                    <Input 
+                        type="date" 
+                        placeholder="Last Inspection Date" 
+                        value={formData.lastInspectionDate}
+                        onChange={(e) => setFormData({ ...formData, lastInspectionDate: e.target.value })}
+                    />
+                    <Textarea 
+                        placeholder="Notes"
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    />
+                    <button onClick={handleSave}>Save</button>
                 </div>
             )}
         </main>
