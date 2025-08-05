@@ -586,3 +586,52 @@ interface InputProps {
 - Forms can be completed and saved locally
 - Return navigation back to main page works consistently
 - Maintains all existing online functionality
+
+---
+
+## 📋 **NEW TASK: Preemptive Caching with Loading Overlay**
+
+### **Goal:** 
+Create a seamless offline-first experience where all pages are cached immediately on load, with visual feedback.
+
+### **Simple Implementation Plan:**
+
+#### **Task 6.1: Cache Loading Overlay Component** ⚡ **[NEXT]**
+- **What:** Beautiful overlay with dulled background and percentage counter
+- **Design:**
+  - Semi-transparent dark backdrop (rgba(0,0,0,0.7))
+  - Centered card with JBS branding
+  - Progress bar with smooth percentage animation (0% → 100%)
+  - Simple, clean typography
+  - Subtle loading animation/spinner
+- **Success Criteria:** Professional loading experience, smooth animations
+
+#### **Task 6.2: Preemptive Page Caching** 
+- **What:** Cache all form pages immediately on main page load
+- **Implementation:**
+  - Use Next.js `router.prefetch()` for all critical pages
+  - Cache pages in background: mechanical, electrical, compliance forms
+  - Track caching progress for overlay percentage
+- **Success Criteria:** All pages available offline without visiting them first
+
+#### **Task 6.3: Progress Tracking & Animation**
+- **What:** Real-time progress tracking with smooth counter animation
+- **Implementation:**
+  - Track each page caching completion
+  - Animate counter smoothly from 0% to 100%
+  - Hide overlay when 100% complete with fade-out
+- **Success Criteria:** Smooth UX, users see clear progress indication
+
+#### **Task 6.4: Graceful Error Handling**
+- **What:** Handle caching failures gracefully
+- **Implementation:**
+  - Fallback to lazy loading if preemptive caching fails
+  - Show appropriate messaging for network issues
+  - Ensure app remains functional regardless of caching status
+- **Success Criteria:** App works in all network conditions
+
+### **Technical Notes:**
+- Use `useEffect` on main page to trigger caching
+- Leverage service worker cache events for accurate progress
+- Implement with React state management for smooth UI updates
+- Consider using `IntersectionObserver` for performance optimization
