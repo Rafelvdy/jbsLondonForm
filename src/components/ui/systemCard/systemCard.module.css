@@ -1,18 +1,71 @@
 .SystemCardContainer {
     width: 300px;
-    height: 60px;
+    height: 120px; /* Increased from 60px to fit 3 fields */
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start; /* Changed from center to align left */
     justify-content: flex-start;
-    padding: 5px;
+    padding: 12px; /* Increased from 5px for better spacing */
     background-color: #d4d4d4;
     margin-bottom: 20px;
     border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Added subtle shadow */
 }
 
 .SystemCardTitle {
     font-size: 15px;
     font-weight: 600;
-    margin-bottom: 20px;
+    margin-bottom: 8px; /* Reduced from 20px to save space */
+    color: #333;
+    width: 100%;
+    text-align: center; /* Keep title centered */
+}
+
+/* New styles for dynamic content */
+.SystemCardContent {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Space between each field */
+}
+
+.SystemCardField {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.FieldLabel {
+    font-weight: 500;
+    color: #555;
+    flex-shrink: 0; /* Prevent label from shrinking */
+    margin-right: 8px;
+}
+
+.FieldValue {
+    font-weight: 400;
+    color: #333;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1; /* Take remaining space */
+}
+
+/* Optional: Add hover effect */
+.SystemCardContainer:hover {
+    background-color: #c8c8c8;
+    transition: background-color 0.2s ease;
+}
+
+/* For empty state message */
+.NoSystemsMessage {
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+    margin: 20px 0;
+    text-align: center;
 }

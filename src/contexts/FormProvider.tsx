@@ -260,15 +260,15 @@ export const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
                 const loadedState: FormState = {
                     ...parsedData,
                     lastModified: new Date(parsedData.lastModified),
-                    mechanicalSystems: parsedData.mechanicalSystems.map((system: any) => ({
+                    mechanicalSystems: parsedData.mechanicalSystems.map((system: MechanicalSystem) => ({
                         ...system,
                         dateAdded: new Date(system.dateAdded)
                     })),
-                    electricalSystems: parsedData.electricalSystems.map((system: any) => ({
+                    electricalSystems: parsedData.electricalSystems.map((system: ElectricalSystem) => ({
                         ...system,
                         dateAdded: new Date(system.dateAdded)
                     })),
-                    complianceSystems: parsedData.complianceSystems.map((system: any) => ({
+                    complianceSystems: parsedData.complianceSystems.map((system: ComplianceSystem   ) => ({
                         ...system,
                         dateAdded: new Date(system.dateAdded)
                     }))

@@ -22,9 +22,9 @@ export interface SystemBase {
     dateAdded: Date;
 }
 
-export interface MechanicalSystem extends SystemBase {}
+export type MechanicalSystem = SystemBase;
 
-export interface ElectricalSystem extends SystemBase {}
+export type ElectricalSystem = SystemBase;
 
 export interface ComplianceSystem {
     id: string;
