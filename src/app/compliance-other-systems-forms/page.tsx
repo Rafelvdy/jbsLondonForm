@@ -8,9 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useFormContext } from "@/hooks/useFormContext";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 
 const ComplianceOtherSystemsForms = () => {
+    const router = useRouter();
     const [selectedSystem, setSelectedSystem] = useState<string>("");
     const [isComboboxOpen, setIsComboboxOpen] = useState<boolean>(false);
     const hasSelection = selectedSystem !== "";
@@ -44,14 +47,14 @@ const ComplianceOtherSystemsForms = () => {
             systemLabel: systems.find(s => s.value === selectedSystem)?.label || '',
             ...formData,
         })
-        // Navigate back to main page using standard navigation
-        window.location.href = "/";
+        // Navigate back using Next.js router - works reliably offline on all platforms
+        router.replace("/");
     }
 
     return (
         <main className={styles.MechanicalSystemFormContainer}>
             <div className={styles.CancelContainer}>
-                <a href="/" className={styles.CancelButton}>X</a>
+                <Link href="/" className={styles.CancelButton}>X</Link>
             </div>
             <h1 className={styles.MechanicalSystemFormTitle}>Compliance & Other Systems Form</h1>
             <Combobox 
