@@ -37,7 +37,7 @@ export default function OfflineIndicator() {
   return (
     <div
       className={`
-        fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white text-sm font-medium
+        fixed bottom-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white text-sm font-medium
         transition-all duration-300 ease-in-out
         ${isOnline 
           ? 'bg-green-500 border-green-600' 
