@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1a73e8" rx="64"/>
+  <g fill="white">
+    <text x="256" y="150" text-anchor="middle" font-family="system-ui, sans-serif" font-size="120" font-weight="bold">JBS</text>
+    <text x="256" y="220" text-anchor="middle" font-family="system-ui, sans-serif" font-size="32" font-weight="normal">London</text>
+    <rect x="128" y="280" width="256" height="8" rx="4"/>
+    <rect x="128" y="320" width="200" height="8" rx="4"/>
+    <rect x="128" y="360" width="180" height="8" rx="4"/>
+    <rect x="128" y="400" width="220" height="8" rx="4"/>
+  </g>
+</svg>
