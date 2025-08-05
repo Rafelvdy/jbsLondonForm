@@ -11,6 +11,12 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    rules: {
+      // Disable for offline PWA compatibility - we need <a> tags for reliable iOS offline navigation
+      "@next/next/no-html-link-for-pages": "off"
+    }
+  }
 ];
 
 export default eslintConfig;

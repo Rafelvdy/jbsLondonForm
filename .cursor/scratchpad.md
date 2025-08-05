@@ -555,3 +555,34 @@ interface InputProps {
 - **Advanced caching:** Intelligent cache invalidation strategies  
 - **Background sync:** Queue form submissions for when online
 - **Push notifications:** Update notifications for installed apps
+
+## ⚡ **LATEST UPDATE: iOS Offline Navigation Fix**
+
+### **🔧 CRITICAL FIX APPLIED - iOS PWA Navigation Issue Resolved**
+
+**Problem Identified:**
+- iOS PWAs fail to navigate between pages when offline
+- `router.push()` from Next.js relies on JavaScript context that freezes on iOS
+- Service worker context becomes unreliable during background/foreground transitions
+
+**Solution Implemented:**
+✅ **Replaced all `router.push()` with reliable navigation methods:**
+1. **Main Navigation Buttons:** Used Next.js `<Link>` components for better caching
+2. **Form Return Navigation:** Used `window.location.href = "/"` for bulletproof offline navigation  
+3. **Cancel Buttons:** Used standard `<a href="/">` links with ESLint exception
+
+**Files Updated:**
+- ✅ `src/components/mechanicalSystems/mechanicalSystems.tsx`
+- ✅ `src/components/electricalsystems/page.tsx` 
+- ✅ `src/components/complianceOtherSystems/complianceOtherSystems.tsx`
+- ✅ `src/app/mechanical-system-form/page.tsx`
+- ✅ `src/app/electrical-system-form/page.tsx`
+- ✅ `src/app/compliance-other-systems-forms/page.tsx`
+- ✅ `eslint.config.mjs` (added offline navigation exception)
+
+**Expected Result:**
+🎯 **iOS PWA navigation will now work reliably offline**
+- Users can navigate to system forms when offline
+- Forms can be completed and saved locally
+- Return navigation back to main page works consistently
+- Maintains all existing online functionality

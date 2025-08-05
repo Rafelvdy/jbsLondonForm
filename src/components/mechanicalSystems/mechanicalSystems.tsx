@@ -1,11 +1,10 @@
 "use client";
 import styles from "./mechanicalSystems.module.css";
-import { useRouter } from "next/navigation";
 import SystemCard from "../ui/systemCard/systemCard";
 import { useFormContext } from "@/hooks/useFormContext";
+import Link from "next/link";
 
 const MechanicalSystems = () => {
-    const router = useRouter();
     const { state } = useFormContext();
 
     return (
@@ -26,12 +25,9 @@ const MechanicalSystems = () => {
                 <p className={styles.NoSystemsMessage}>No mechanical systems added yet</p>
             )}
 
-            <button     
-                className={styles.AddSystemButton}
-                onClick={() => {
-                    router.push("/mechanical-system-form")
-                }}
-            >Add System</button>
+            <Link href="/mechanical-system-form" className={styles.AddSystemButton}>
+                Add System
+            </Link>
 
         </main>
     )

@@ -1,11 +1,10 @@
 "use client";
 import styles from "./complianceOtherSystems.module.css";
-import { useRouter } from "next/navigation";
 import { useFormContext } from "@/hooks/useFormContext";
 import SystemCard from "../ui/systemCard/systemCard";
+import Link from "next/link";
 
 const ComplianceOtherSystems = () => {
-    const router = useRouter();
     const { state } = useFormContext();
 
     return (
@@ -25,12 +24,10 @@ const ComplianceOtherSystems = () => {
             ) : (
                 <p className={styles.NoSystemsMessage}>No compliance other systems added yet</p>
             )}
-            <button 
-                className={styles.AddSystemButton}
-                onClick={() => {
-                    router.push("/compliance-other-systems-forms")
-                }}
-            >Add System</button>
+            
+            <Link href="/compliance-other-systems-forms" className={styles.AddSystemButton}>
+                Add System
+            </Link>
 
         </main>
     )

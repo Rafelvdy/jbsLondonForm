@@ -3,7 +3,7 @@ import { Combobox } from "@/components/ui/combobox";
 import styles from "./page.module.css";
 import { useState } from "react";
 import { Input } from "@/components/input";
-import { useRouter } from "next/navigation";
+
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,6 @@ import { useFormContext } from "@/hooks/useFormContext";
 
 
 const ComplianceOtherSystemsForms = () => {
-    const router = useRouter();
     const [selectedSystem, setSelectedSystem] = useState<string>("");
     const [isComboboxOpen, setIsComboboxOpen] = useState<boolean>(false);
     const hasSelection = selectedSystem !== "";
@@ -45,15 +44,14 @@ const ComplianceOtherSystemsForms = () => {
             systemLabel: systems.find(s => s.value === selectedSystem)?.label || '',
             ...formData,
         })
-        router.push("..");
+        // Navigate back to main page using standard navigation
+        window.location.href = "/";
     }
 
     return (
         <main className={styles.MechanicalSystemFormContainer}>
             <div className={styles.CancelContainer}>
-                <button className={styles.CancelButton} onClick={() => {
-                    router.push("..")
-                }}>X</button>
+                <a href="/" className={styles.CancelButton}>X</a>
             </div>
             <h1 className={styles.MechanicalSystemFormTitle}>Compliance & Other Systems Form</h1>
             <Combobox 
