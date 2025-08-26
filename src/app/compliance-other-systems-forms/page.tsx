@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { useFormContext } from "@/hooks/useFormContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
+import PhotoPickerInline from "@/components/photos/PhotoPickerInline";
+import type { PhotoMeta } from "@/types/formTypes";
 
 const ComplianceOtherSystemsForms = () => {
     const router = useRouter();
@@ -33,6 +34,8 @@ const ComplianceOtherSystemsForms = () => {
         { value: "water-treatment-dosing", label: "Water Treatment / Dosing" },
     ]
 
+    const [photos, setPhotos] = useState<PhotoMeta[]>([]);
+
     const { addComplianceSystem } = useFormContext();
 
     const [formData, setFormData] = useState({
@@ -46,6 +49,7 @@ const ComplianceOtherSystemsForms = () => {
             systemType: selectedSystem,
             systemLabel: systems.find(s => s.value === selectedSystem)?.label || '',
             ...formData,
+            photos,
         })
         // Navigate back using Next.js router - works reliably offline on all platforms
         router.replace("/");
@@ -91,6 +95,7 @@ const ComplianceOtherSystemsForms = () => {
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
+                    <PhotoPickerInline value={photos} onChange={setPhotos} />
                     <button onClick={handleSave}>Save</button>
                 </div>
             )}

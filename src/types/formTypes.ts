@@ -8,6 +8,17 @@ export interface BuildingInfo {
     buildingSize: number;
 }
 
+export interface PhotoMeta {
+    id: string; // imageId
+    fileName: string;
+    sizeBytes: number;
+    mimeType: string;
+    width: number;
+    height: number;
+    createdAt: string; // ISO string
+    contentHash: string; // SHA-256 hex
+}
+
 export interface SystemBase {
     id: string; // unique id for identification
     systemType: string; // value of system name from the combo box
@@ -20,6 +31,7 @@ export interface SystemBase {
     serviceInterval: string;
     notes: string;
     dateAdded: Date;
+    photos?: PhotoMeta[];
 }
 
 export type MechanicalSystem = SystemBase;
@@ -34,6 +46,7 @@ export interface ComplianceSystem {
     lastInspectionDate: string; // ISO date string
     notes: string;
     dateAdded: Date;
+    photos?: PhotoMeta[];
 }
 
 export interface PPMSummary {

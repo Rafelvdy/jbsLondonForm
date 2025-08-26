@@ -7,8 +7,11 @@ const nextConfig: NextConfig = {
 
 export default withPWA({
   dest: "public",
-  register: true,
-  skipWaiting: true,
+  // Disable PWA during development to avoid repeated GenerateSW in watch mode
+  disable: process.env.NODE_ENV === "development",
+  // Only register the service worker in production
+  register: process.env.NODE_ENV === "production",
+  skipWaiting: process.env.NODE_ENV === "production",
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

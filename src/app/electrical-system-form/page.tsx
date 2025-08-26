@@ -7,6 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useFormContext } from "@/hooks/useFormContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PhotoPickerInline from "@/components/photos/PhotoPickerInline";
+import type { PhotoMeta } from "@/types/formTypes";
+
 
 const ElectricalSystemForm = () => {
     const router = useRouter();
@@ -31,6 +34,8 @@ const ElectricalSystemForm = () => {
         { value: "lightning-protection", label: "Lightning Protection" },
     ]
 
+    const [photos, setPhotos] = useState<PhotoMeta[]>([]);
+
     const { addElectricalSystem } = useFormContext();
 
     const [formData, setFormData] = useState({
@@ -48,6 +53,7 @@ const ElectricalSystemForm = () => {
             systemType: selectedSystem,
             systemLabel: systems.find(s => s.value === selectedSystem)?.label || '',
             ...formData,
+            photos,
         })
         // Navigate back using Next.js router - works reliably offline on all platforms
         router.replace("/");
@@ -109,6 +115,7 @@ const ElectricalSystemForm = () => {
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
+                    <PhotoPickerInline value={photos} onChange={setPhotos} />
                     <button onClick={handleSave}>Save</button>
                 </div>
             )}

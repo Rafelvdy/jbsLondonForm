@@ -589,6 +589,154 @@ interface InputProps {
 
 ---
 
+## New Feature Plan: Offline Photo Uploads per System (Planner Mode)
+
+### Background and Motivation
+
+Users need to attach photos to each system entry (mechanical, electrical, compliance) while fully offline, with smooth capture on mobile and desktop and efficient storage to avoid bloating localStorage and service-worker caches. Photos should be available for review in the app, persist across sessions, and be ready for future sync.
+
+### Key Challenges and Analysis
+
+- Efficient local persistence: Binary images must NOT go to localStorage (stringified base64 is large). Primary storage in IndexedDB; optionally use OPFS (Origin Private File System) where available for large blobs, with graceful fallback to IndexedDB for Safari/iOS.
+- Cross-device capture UX: Use the native file input with camera capture on mobile (`<input type="file" accept="image/*" capture="environment">`) so it works across iOS/Android/desktop.
+- Data model design: Keep large data out of the React context/localStorage; store only lightweight metadata and image IDs on each system. Include a content hash for deduplication.
+- Performance: Prefer AVIF encoding when available (smaller files), gracefully fall back to WebP or PNG; generate a small thumbnail for lists; lazy-load full images on demand. Run compression in a Web Worker when supported to keep the UI responsive; fall back to main thread if bundling constraints apply.
+- Quota and reliability: Handle QuotaExceededError, show storage usage, enable deletion. Request persistent storage (`navigator.storage.persist()`) to reduce eviction risk and use `navigator.storage.estimate()` to enforce limits.
+- PWA/offline: All flows must work offline (no network). Service worker config should not cache large user-generated blobs; keep them exclusively in IDB/OPFS.
+
+### Design Overview
+
+1) Storage layer (abstracted: OPFS or IndexedDB)
+- Primary: feature-detect OPFS (Chromium). If available, store full-size images as files under an app-private directory and persist file handles in metadata. Fallback: IndexedDB on Safari/iOS and any browser without OPFS.
+- Always keep thumbnails in IndexedDB for fast list rendering (small, cheap to fetch and decode).
+- Helper module: `src/lib/mediaStore.ts` exposing a unified API with pluggable backend (OPFS/IDB):
+  - `saveImage(fileOrBlob): Promise<{ imageId, meta }>`
+  - `getImageBlob(imageId): Promise<Blob | null>`
+  - `getThumbBlob(imageId): Promise<Blob | null>`
+  - `deleteImage(imageId): Promise<void>` (removes original and thumbnail)
+  - `estimateUsage(): Promise<{ usedBytes, quotaBytes? }>`
+  - Internally computes `contentHash` (SHA-256) to deduplicate images across systems.
+
+2) Image processing (worker-backed, with graceful fallback)
+- Prefer encoding to AVIF for best compression; gracefully fall back to WebP; final fallback PNG if encoder unsupported.
+- Max dimension: 1600px for originals; Thumbnail max dimension: 256px.
+- Strip EXIF/metadata by re-encoding.
+- Run processing in a Web Worker when supported (`src/workers/imageWorker.ts`) using Canvas/OffscreenCanvas and `createImageBitmap`. If worker bundling is constrained, fall back to main-thread processing (same API).
+
+3) Data model changes (lightweight in FormState)
+- Add `PhotoMeta` type: `{ id: string; fileName: string; sizeBytes: number; mimeType: string; width: number; height: number; createdAt: string; contentHash: string }`.
+- Extend `SystemBase` with `photos: PhotoMeta[]` (IDs and metadata only; no blobs or file paths in state/localStorage).
+- Keep FormState in localStorage unchanged except for these small arrays.
+
+4) Context actions
+- Add generic photo actions to avoid duplication:
+  - `ADD_SYSTEM_PHOTO` payload: `{ systemKind: 'mechanical' | 'electrical' | 'compliance'; systemId: string; photo: PhotoMeta }`
+  - `REMOVE_SYSTEM_PHOTO` payload: `{ systemKind: ..., systemId: string; photoId: string }`
+- Reducer updates the appropriate system list by ID.
+
+5) UI components
+- `PhotoUploader` component:
+  - Native input: `type="file" accept="image/*" capture="environment" multiple`.
+  - On select: compress (worker when available), generate thumb, deduplicate by `contentHash`, store via `mediaStore`, dispatch ADD_SYSTEM_PHOTO with returned meta.
+  - Show thumbnails, per-file progress, storage usage.
+- `PhotoGallery` component:
+  - Displays thumbnails for a system; clicking opens full image in a dialog using object URLs (`URL.createObjectURL(blob)`), with revoke on unmount.
+  - Supports delete with confirmation; on delete also removes from media storage and dispatches REMOVE_SYSTEM_PHOTO.
+
+6) Integration points
+- System creation forms:
+  - Optional: stage photos while editing a new system; on save, include `photos` so the reducer preserves them with the generated system ID.
+- MVP (faster): enable photo uploads from the system list/card after the system exists.
+- System cards (`SystemCard`): show photo count and a quick-access gallery.
+
+7) Offline/PWA considerations
+- No network required; all operations use IDB/OPFS and in-memory object URLs.
+- Do not add user-generated photos to service worker HTTP caches; they live only in IDB/OPFS, so existing next-pwa config remains valid.
+- Ensure routes remain functional offline as already implemented (router fixes already in place).
+
+### High-level Task Breakdown (with Success Criteria)
+
+Phase A: Foundations
+- [ ] A1. Define `PhotoMeta` type and extend `SystemBase` with `photos: PhotoMeta[]`
+  - Success: TypeScript compiles; existing app unchanged; systems can hold empty `photos` arrays.
+- [ ] A2. Add context actions and reducer cases for add/remove system photos
+  - Success: Dispatching add/remove updates the correct system’s `photos` array.
+- [ ] A3. Storage backend detection and abstraction
+  - Success: `mediaStore` chooses OPFS on Chromium and IndexedDB elsewhere; same API surface.
+
+Phase B: Storage Layer
+- [ ] B1. Implement `src/lib/mediaStore.ts` (OPFS+IDB backends, add/get/delete, usage, dedup by content hash)
+  - Success: Unit tests pass with `fake-indexeddb` for IDB; OPFS code path feature-detected in browser.
+- [ ] B2. Implement image processing utility `src/lib/imageUtils.ts` (encode AVIF→WebP→PNG; thumbnail; EXIF strip)
+  - Success: Given an input File, returns compressed Blob + thumbnail with expected max dimensions and mime types.
+- [ ] B3. Optional: Worker wrapper `src/workers/imageWorker.ts` with graceful main-thread fallback
+  - Success: Worker path used when available; UI remains responsive on large images.
+
+Phase C: UI Components
+- [ ] C1. Create `PhotoUploader` with native file input and progress
+  - Success: Selecting images saves via `mediaStore` and returns `PhotoMeta`; multiple selection supported; errors surfaced.
+- [ ] C2. Create `PhotoGallery` with thumbnail grid and full-screen viewer
+  - Success: Thumbnails render quickly; full image opens; memory cleaned by revoking object URLs; delete works.
+
+Phase D: Integrations
+- [ ] D1. Add `PhotoGallery` and `PhotoUploader` to Mechanical systems (card-level first)
+  - Success: Can add/remove photos to an existing mechanical system; persists across reloads offline.
+- [ ] D2. Repeat for Electrical systems
+  - Success: Same behavior for electrical.
+- [ ] D3. Repeat for Compliance systems
+  - Success: Same behavior for compliance.
+- [ ] D4. (Optional) In-form staging: allow adding photos while creating a new system entry
+  - Success: Photos added before save appear on the newly created system after save.
+
+Phase E: UX, Limits, and Safety
+- [ ] E1. Add size/quantity limits (default: max 10 photos/system, max ~15MB/system)
+  - Success: Attempts beyond limits show friendly messages; uploads prevented.
+- [ ] E2. Add storage usage indicator and quota handling (`navigator.storage.estimate`, `persist()`)
+  - Success: Usage bar visible; on QuotaExceededError, user sees clear guidance to delete photos.
+- [ ] E3. Deduplication via `contentHash`
+  - Success: Identical images are not stored twice; UI shows message when duplicates are skipped.
+
+Phase F: Testing and Docs
+- [ ] F1. Unit tests for `mediaStore` and `imageUtils` using `jest` + `fake-indexeddb`
+  - Success: CI/local test run green; core functions covered.
+- [ ] F2. Manual test checklist across devices (iOS/Android/desktop)
+  - Success: Camera capture opens on mobile; gallery/file picker works on desktop; fully offline.
+
+### Project Status Board (Photo Uploads)
+
+- [ ] Plan approved by user (Planner)
+- [ ] A1. Extend types with `PhotoMeta` and `photos` on `SystemBase`
+- [ ] A2. Context actions/reducer for photos
+- [ ] A3. Backend detection (OPFS vs IDB) and abstraction
+- [ ] B1. Implement `mediaStore` (OPFS+IndexedDB with dedup and usage)
+- [ ] B2. Implement `imageUtils` (AVIF→WebP→PNG + thumbnail)
+- [ ] B3. Optional: Worker wrapper
+- [ ] C1. Build `PhotoUploader`
+- [ ] C2. Build `PhotoGallery`
+- [ ] D1. Integrate with Mechanical systems (card-level)
+- [ ] D2. Integrate with Electrical systems (card-level)
+- [ ] D3. Integrate with Compliance systems (card-level)
+- [ ] D4. Optional: In-form staging during creation
+- [ ] E1. Limits and error handling
+- [ ] E2. Storage usage indicator and persist request
+- [ ] E3. Deduplication by hash
+- [ ] F1. Unit tests for storage/utils
+- [ ] F2. Manual device testing
+
+### Executor's Feedback or Assistance Requests (for when we switch to Executor mode)
+
+- Confirm whether MVP should allow uploads only after a system exists (card-level) first, then add in-form staging, to speed delivery.
+- Confirm preferred compression targets: 1600px max; AVIF quality ~0.6–0.8; thumbnail 256px.
+- Confirm limits per system (default: 10 photos/system, max ~15MB/system).
+- Confirm whether to include an optional Squoosh/wasm encoder or stay with Canvas-only encoders for initial version (smaller bundle, broader compatibility).
+
+### Lessons (anticipated)
+
+- Keep images out of localStorage; use OPFS where available and IndexedDB otherwise; keep only metadata in context/localStorage.
+- Strip EXIF to reduce size and avoid leaking location data from camera captures.
+- Use worker-based processing when supported to keep UI responsive; always provide a main-thread fallback to ensure compatibility.
+
+
 ## 📋 **NEW TASK: Preemptive Caching with Loading Overlay**
 
 ### **Goal:** 

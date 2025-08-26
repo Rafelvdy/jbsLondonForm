@@ -1,10 +1,10 @@
 "use client";
 import React, { useReducer, useEffect, ReactNode } from 'react';
 import { FormContext } from './FormContext';
-import { FormState, BuildingInfo, MechanicalSystem, ElectricalSystem, ComplianceSystem, PPMSummary } from '../types/formTypes';
+import { FormState, BuildingInfo, MechanicalSystem, ElectricalSystem, ComplianceSystem, PPMSummary, PhotoMeta } from '../types/formTypes';
 import { v4 as uuidv4 } from 'uuid';
 
-// Install uuid: npm install uuid @types/uuid
+type SystemKind = 'mechanical' | 'electrical' | 'compliance';
 
 type FormAction =
     | { type: 'UPDATE_BUILDING_INFO'; payload: Partial<BuildingInfo> }
@@ -20,7 +20,10 @@ type FormAction =
     | { type: 'UPDATE_PPM_SUMMARY'; payload: Partial<PPMSummary> }
     | { type: 'LOAD_FROM_STORAGE'; payload: FormState }
     | { type: 'MARK_CLEAN' }
-    | { type: 'CLEAR_FORM' };
+    | { type: 'CLEAR_FORM' }
+    // NEW: photos
+    | { type: 'ADD_SYSTEM_PHOTO'; payload: { systemKind: SystemKind; systemId: string; photo: PhotoMeta } }
+    | { type: 'REMOVE_SYSTEM_PHOTO'; payload: { systemKind: SystemKind; systemId: string; photoId: string } };
 
 const initialState: FormState = {
     buildingInfo: {
@@ -47,6 +50,21 @@ const initialState: FormState = {
     isDirty: false
 };
 
+function addPhotoToList<T extends { id: string; photos?: PhotoMeta[] }>(list: T[], systemId: string, photo: PhotoMeta): T[] {
+    return list.map(item => {
+        if (item.id !== systemId) return item;
+        const existing = item.photos ?? [];
+        return { ...item, photos: [...existing, photo] } as T;
+    });
+}
+function removePhotoFromList<T extends { id: string; photos?: PhotoMeta[] }>(list: T[], systemId: string, photoId: string): T[] {
+    return list.map(item => {
+        if (item.id !== systemId) return item;
+        const existing = item.photos ?? [];
+        return { ...item, photos: existing.filter(p => p.id !== photoId) } as T;
+    });
+}
+
 const formReducer = (state: FormState, action: FormAction): FormState => {
     switch (action.type) {
         case 'UPDATE_BUILDING_INFO':
@@ -57,7 +75,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 isDirty: true
             };
 
-        case 'ADD_MECHANICAL_SYSTEM':
+        case 'ADD_MECHANICAL_SYSTEM': {
             const newMechanicalSystem: MechanicalSystem = {
                 ...action.payload,
                 id: uuidv4(),
@@ -69,6 +87,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 lastModified: new Date(),
                 isDirty: true
             };
+        }
 
         case 'UPDATE_MECHANICAL_SYSTEM':
             return {
@@ -90,7 +109,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 isDirty: true
             };
 
-        case 'ADD_ELECTRICAL_SYSTEM':
+        case 'ADD_ELECTRICAL_SYSTEM': {
             const newElectricalSystem: ElectricalSystem = {
                 ...action.payload,
                 id: uuidv4(),
@@ -102,6 +121,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 lastModified: new Date(),
                 isDirty: true
             };
+        }
 
         case 'UPDATE_ELECTRICAL_SYSTEM':
             return {
@@ -123,7 +143,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 isDirty: true
             };
 
-        case 'ADD_COMPLIANCE_SYSTEM':
+        case 'ADD_COMPLIANCE_SYSTEM': {
             const newComplianceSystem: ComplianceSystem = {
                 ...action.payload,
                 id: uuidv4(),
@@ -135,6 +155,7 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
                 lastModified: new Date(),
                 isDirty: true
             };
+        }
 
         case 'UPDATE_COMPLIANCE_SYSTEM':
             return {
@@ -173,6 +194,58 @@ const formReducer = (state: FormState, action: FormAction): FormState => {
         case 'CLEAR_FORM':
             return { ...initialState, lastModified: new Date() };
 
+        case 'ADD_SYSTEM_PHOTO': {
+            const { systemKind, systemId, photo } = action.payload;
+            if (systemKind === 'mechanical') {
+                return {
+                    ...state,
+                    mechanicalSystems: addPhotoToList(state.mechanicalSystems, systemId, photo),
+                    lastModified: new Date(),
+                    isDirty: true
+                };
+            }
+            if (systemKind === 'electrical') {
+                return {
+                    ...state,
+                    electricalSystems: addPhotoToList(state.electricalSystems, systemId, photo),
+                    lastModified: new Date(),
+                    isDirty: true
+                };
+            }
+            return {
+                ...state,
+                complianceSystems: addPhotoToList(state.complianceSystems, systemId, photo),
+                lastModified: new Date(),
+                isDirty: true
+            };
+        }
+
+        case 'REMOVE_SYSTEM_PHOTO': {
+            const { systemKind, systemId, photoId } = action.payload;
+            if (systemKind === 'mechanical') {
+                return {
+                    ...state,
+                    mechanicalSystems: removePhotoFromList(state.mechanicalSystems, systemId, photoId),
+                    lastModified: new Date(),
+                    isDirty: true
+                };
+            }
+            if (systemKind === 'electrical') {
+                return {
+                    ...state,
+                    electricalSystems: removePhotoFromList(state.electricalSystems, systemId, photoId),
+                    lastModified: new Date(),
+                    isDirty: true
+                };
+            }
+            return {
+                ...state,
+                complianceSystems: removePhotoFromList(state.complianceSystems, systemId, photoId),
+                lastModified: new Date(),
+                isDirty: true
+            };
+        }
+
         default:
             return state;
     }
@@ -187,53 +260,18 @@ interface FormProviderProps {
 export const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
     const [state, dispatch] = useReducer(formReducer, initialState);
 
-    // Load from localStorage on mount
     useEffect(() => {
         loadFromLocalStorage();
     }, []);
 
-    const updateBuildingInfo = (info: Partial<BuildingInfo>) => {
-        dispatch({ type: 'UPDATE_BUILDING_INFO', payload: info });
+    // ...existing action creators...
+
+    const addSystemPhoto = (args: { systemKind: SystemKind; systemId: string; photo: PhotoMeta }) => {
+        dispatch({ type: 'ADD_SYSTEM_PHOTO', payload: args });
     };
 
-    const addMechanicalSystem = (system: Omit<MechanicalSystem, 'id' | 'dateAdded'>) => {
-        dispatch({ type: 'ADD_MECHANICAL_SYSTEM', payload: system });
-    };
-
-    const updateMechanicalSystem = (id: string, system: Partial<MechanicalSystem>) => {
-        dispatch({ type: 'UPDATE_MECHANICAL_SYSTEM', payload: { id, system } });
-    };
-
-    const deleteMechanicalSystem = (id: string) => {
-        dispatch({ type: 'DELETE_MECHANICAL_SYSTEM', payload: id });
-    };
-
-    const addElectricalSystem = (system: Omit<ElectricalSystem, 'id' | 'dateAdded'>) => {
-        dispatch({ type: 'ADD_ELECTRICAL_SYSTEM', payload: system });
-    };
-
-    const updateElectricalSystem = (id: string, system: Partial<ElectricalSystem>) => {
-        dispatch({ type: 'UPDATE_ELECTRICAL_SYSTEM', payload: { id, system } });
-    };
-
-    const deleteElectricalSystem = (id: string) => {
-        dispatch({ type: 'DELETE_ELECTRICAL_SYSTEM', payload: id });
-    };
-
-    const addComplianceSystem = (system: Omit<ComplianceSystem, 'id' | 'dateAdded'>) => {
-        dispatch({ type: 'ADD_COMPLIANCE_SYSTEM', payload: system });
-    };
-
-    const updateComplianceSystem = (id: string, system: Partial<ComplianceSystem>) => {
-        dispatch({ type: 'UPDATE_COMPLIANCE_SYSTEM', payload: { id, system } });
-    };
-
-    const deleteComplianceSystem = (id: string) => {
-        dispatch({ type: 'DELETE_COMPLIANCE_SYSTEM', payload: id });
-    };
-
-    const updatePPMSummary = (summary: Partial<PPMSummary>) => {
-        dispatch({ type: 'UPDATE_PPM_SUMMARY', payload: summary });
+    const removeSystemPhoto = (args: { systemKind: SystemKind; systemId: string; photoId: string }) => {
+        dispatch({ type: 'REMOVE_SYSTEM_PHOTO', payload: args });
     };
 
     const saveToLocalStorage = () => {
@@ -256,7 +294,6 @@ export const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 const parsedData = JSON.parse(stored);
-                // Convert date strings back to Date objects
                 const loadedState: FormState = {
                     ...parsedData,
                     lastModified: new Date(parsedData.lastModified),
@@ -268,7 +305,7 @@ export const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
                         ...system,
                         dateAdded: new Date(system.dateAdded)
                     })),
-                    complianceSystems: parsedData.complianceSystems.map((system: ComplianceSystem   ) => ({
+                    complianceSystems: parsedData.complianceSystems.map((system: ComplianceSystem) => ({
                         ...system,
                         dateAdded: new Date(system.dateAdded)
                     }))
@@ -288,17 +325,22 @@ export const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
 
     const contextValue = {
         state,
-        updateBuildingInfo,
-        addMechanicalSystem,
-        updateMechanicalSystem,
-        deleteMechanicalSystem,
-        addElectricalSystem,
-        updateElectricalSystem,
-        deleteElectricalSystem,
-        addComplianceSystem,
-        updateComplianceSystem,
-        deleteComplianceSystem,
-        updatePPMSummary,
+        // ...existing exports...
+        addMechanicalSystem: (system: Omit<MechanicalSystem, 'id' | 'dateAdded'>) => dispatch({ type: 'ADD_MECHANICAL_SYSTEM', payload: system }),
+        updateMechanicalSystem: (id: string, system: Partial<MechanicalSystem>) => dispatch({ type: 'UPDATE_MECHANICAL_SYSTEM', payload: { id, system } }),
+        deleteMechanicalSystem: (id: string) => dispatch({ type: 'DELETE_MECHANICAL_SYSTEM', payload: id }),
+        addElectricalSystem: (system: Omit<ElectricalSystem, 'id' | 'dateAdded'>) => dispatch({ type: 'ADD_ELECTRICAL_SYSTEM', payload: system }),
+        updateElectricalSystem: (id: string, system: Partial<ElectricalSystem>) => dispatch({ type: 'UPDATE_ELECTRICAL_SYSTEM', payload: { id, system } }),
+        deleteElectricalSystem: (id: string) => dispatch({ type: 'DELETE_ELECTRICAL_SYSTEM', payload: id }),
+        addComplianceSystem: (system: Omit<ComplianceSystem, 'id' | 'dateAdded'>) => dispatch({ type: 'ADD_COMPLIANCE_SYSTEM', payload: system }),
+        updateComplianceSystem: (id: string, system: Partial<ComplianceSystem>) => dispatch({ type: 'UPDATE_COMPLIANCE_SYSTEM', payload: { id, system } }),
+        deleteComplianceSystem: (id: string) => dispatch({ type: 'DELETE_COMPLIANCE_SYSTEM', payload: id }),
+
+        addSystemPhoto,
+        removeSystemPhoto,
+
+        updateBuildingInfo: (info: Partial<BuildingInfo>) => dispatch({ type: 'UPDATE_BUILDING_INFO', payload: info }),
+        updatePPMSummary: (summary: Partial<PPMSummary>) => dispatch({ type: 'UPDATE_PPM_SUMMARY', payload: summary }),
         saveToLocalStorage,
         loadFromLocalStorage,
         clearForm

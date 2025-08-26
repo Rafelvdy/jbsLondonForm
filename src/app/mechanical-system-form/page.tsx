@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useFormContext } from "@/hooks/useFormContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PhotoPickerInline from "@/components/photos/PhotoPickerInline";
+import { PhotoMeta } from "@/types/formTypes";
 
 const MechanicalSystemForm = () => {
     const router = useRouter();
@@ -28,6 +30,7 @@ const MechanicalSystemForm = () => {
         serviceInterval: '',
         notes: '',
     })
+    const [photos, setPhotos] = useState<PhotoMeta[]>([]);
 
     const systems = [
         { value: "boiler", label: "Boiler(s)" },
@@ -48,6 +51,7 @@ const MechanicalSystemForm = () => {
             systemType: selectedSystem,
             systemLabel: systems.find(s => s.value === selectedSystem)?.label || '',
             ...formData,
+            photos,
         });
         // Navigate back using Next.js router - works reliably offline on all platforms
         router.replace("/");
@@ -109,6 +113,7 @@ const MechanicalSystemForm = () => {
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
+                    <PhotoPickerInline value={photos} onChange={setPhotos} />
                     <button onClick={handleSave}>Save</button>
                 </div>
 
