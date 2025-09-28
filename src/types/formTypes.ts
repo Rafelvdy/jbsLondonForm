@@ -20,6 +20,8 @@ export interface SystemBase {
     serviceInterval: string;
     notes: string;
     dateAdded: Date;
+
+    photoIds?: string[];
 }
 
 export type MechanicalSystem = SystemBase;
@@ -34,6 +36,8 @@ export interface ComplianceSystem {
     lastInspectionDate: string; // ISO date string
     notes: string;
     dateAdded: Date;
+
+    photoIds?: string[];
 }
 
 export interface PPMSummary {

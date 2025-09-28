@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useFormContext } from "@/hooks/useFormContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
+import PhotoCapture from "@/components/photos/PhotoCapture";
 
 const ComplianceOtherSystemsForms = () => {
     const router = useRouter();
@@ -34,6 +34,7 @@ const ComplianceOtherSystemsForms = () => {
     ]
 
     const { addComplianceSystem } = useFormContext();
+    const [photoIds, setPhotoIds] = useState<string[]>([]);
 
     const [formData, setFormData] = useState({
         complianceStatus: 'yes' as 'yes' | 'no',
@@ -46,6 +47,7 @@ const ComplianceOtherSystemsForms = () => {
             systemType: selectedSystem,
             systemLabel: systems.find(s => s.value === selectedSystem)?.label || '',
             ...formData,
+            photoIds,
         })
         // Navigate back using Next.js router - works reliably offline on all platforms
         router.replace("/");
@@ -91,6 +93,7 @@ const ComplianceOtherSystemsForms = () => {
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
+                    <PhotoCapture initialPhotoIds={photoIds} onChange={setPhotoIds} />
                     <button onClick={handleSave}>Save</button>
                 </div>
             )}

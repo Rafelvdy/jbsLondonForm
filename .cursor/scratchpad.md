@@ -635,3 +635,125 @@ Create a seamless offline-first experience where all pages are cached immediatel
 - Leverage service worker cache events for accurate progress
 - Implement with React state management for smooth UI updates
 - Consider using `IntersectionObserver` for performance optimization
+
+---
+
+## New Goal: Offline Photo Capture per System (Planner)
+
+### Background and Motivation (Update)
+
+Users need to attach photos to each system (mechanical, electrical, compliance) while fully offline. Photos must be captured from mobile device cameras, viewable offline, persisted reliably, and included in the saved local dataset for later sync (future phase).
+
+### Key Challenges and Analysis
+
+- Storage mechanism: `localStorage` is unsuitable for binary images (size + string-only). Use IndexedDB for `Blob` storage.
+- Browser support: `<input type="file" accept="image/*" capture="environment">` works on mobile Chrome/Safari/installed PWAs. Fallback to picker if capture hint is ignored.
+- Quota/eviction: Request persistent storage; compress/resize images to reduce footprint; monitor quota usage.
+- Performance: Resize/compress on-device (canvas/Web Worker) to a sane max dimension and JPEG/WebP quality; generate small thumbnails for UI.
+- Data model: Keep only image IDs/metadata in React context; store actual blobs in IndexedDB.
+- Offline UX: Show thumbnails instantly via `URL.createObjectURL(blob)`; provide delete per photo; display storage usage and errors gracefully.
+
+### High-level Task Breakdown (Photo Capture)
+
+- Phase A: Data Model + Storage (IndexedDB)
+  - [ ] Define `PhotoRecord` (id, systemId, blob, mime, width/height, createdAt, sizeBytes, optional thumbnailBlob).
+  - [ ] Add optional `photoIds: string[]` to `MechanicalSystem`, `ElectricalSystem`, `ComplianceSystem` in `src/types/formTypes.ts`.
+  - [ ] Create `src/lib/photoStore.ts` using `idb`:
+    - `initPhotoDB()` → open DB `jbs-photo-store` with store `photos` (keyPath `id`).
+    - `savePhoto({ fileOrBlob, systemId })` → generate id (uuid), downscale/compress, create thumbnail, write to DB, return `{ id, meta }`.
+    - `getPhoto(id)` → returns `PhotoRecord`.
+    - `getPhotosForSystem(systemId)` → returns list.
+    - `deletePhoto(id)` → removes record.
+    - `estimateUsage()` → wraps `navigator.storage.estimate()` for UI.
+    - `ensurePersistence()` → calls `navigator.storage.persist()` and reports result.
+  - Success criteria: Can write/read/delete blobs offline; records survive reload; >10MB of images accepted without eviction on Android/Chrome (with persistence granted).
+
+- Phase B: Photo Capture UI Component
+  - [ ] Create `src/components/photos/PhotoCapture.tsx` (client component):
+    - Props: `systemTempId`, `initialPhotoIds?`, `onChange(photoIds: string[])`.
+    - Renders `<input type="file" accept="image/*" capture="environment" multiple>`.
+    - On select: compress → save via `photoStore.savePhoto` → update `photoIds` → render thumbnails.
+    - Thumbnails: use `URL.createObjectURL(thumbnailBlob || blob)`; revoke on unmount/update.
+    - Provide delete button per thumbnail → delete from DB and update `photoIds`.
+    - Show storage usage (`estimateUsage`), persistence status, and basic errors.
+  - Success criteria: Add/delete photos fully offline; thumbnails visible instantly; no crashes on large images; memory leaks avoided (object URLs revoked).
+
+- Phase C: Form Integration
+  - [ ] Mechanical/Electrical forms: include `PhotoCapture` below existing inputs.
+    - Keep photos in local component state during entry; on Save, call `add[System]System({...formData, photoIds})`.
+  - [ ] Compliance form: same pattern.
+  - [ ] Main page cards: optionally show first thumbnail per system for quick visual.
+  - Success criteria: After saving a system, its `photoIds` are stored in context; reopening the app shows thumbnails fetched from IndexedDB.
+
+- Phase D: Persistence & Quota UX
+  - [ ] On first photo action, attempt `ensurePersistence()` and show the result in UI (one-time toast/badge).
+  - [ ] Warn when `estimateUsage().quota - usage < threshold` (e.g., <50MB) and suggest deleting old photos.
+  - Success criteria: Clear messaging for storage availability; graceful degradation if persistence not granted (still usable, with warning).
+
+- Phase E: Future Online Sync (Scope-out placeholder)
+  - [ ] Define a `PhotoSyncManifest` structure mapping `systemId → photoIds` for later server upload.
+  - [ ] No network calls in this phase.
+  - Success criteria: Documented structure; no runtime effect now.
+
+### Project Status Board (Photo Capture)
+
+- [x] A1: Implement `photoStore.ts` with save/get/list/delete and compression/thumbnailing
+- [x] A2: Extend types with `photoIds: string[]` and verify TypeScript across usage sites
+- [x] B1: Build `PhotoCapture.tsx` with input, gallery, delete, usage display
+- [x] C1: Integrate into Mechanical form; wire `photoIds` into add action
+- [x] C2: Integrate into Electrical form; wire `photoIds`
+- [x] C3: Integrate into Compliance form; wire `photoIds`
+- [ ] C4: Optional: Show first thumbnail on system cards
+- [ ] D1: Persistence request + quota warning UX (persistence + usage shown; low-storage warning pending)
+
+### Success Criteria (Definition of Done)
+
+- Capture: Users on iOS/Android can take photos or pick from gallery offline.
+- Persistence: Photos stored in IndexedDB; `photoIds` saved in context and survive reload.
+- Display: Thumbnails render offline; delete works; memory usage stable (no runaway growth from unreleased object URLs).
+- Storage: Persistence attempt made; usage/quota visible; resized images keep per-photo size typically <1–2MB.
+- No regressions: Existing offline form features remain stable; service worker unchanged.
+
+### Testing Strategy
+
+- Unit: `photoStore` (mock IndexedDB) — save/get/delete; compression output dimensions/size.
+- Integration: In a test page or with Cypress/Playwright, simulate adding multiple photos offline, reload, verify thumbnails render from DB.
+- Manual devices: iPhone Safari PWA and Android Chrome PWA — capture via camera, gallery import, airplane mode flow, storage usage/readback, deletion.
+- Edge cases: Very large images (48MP), HEIC inputs (ensure conversion to JPEG/WebP), multiple quick captures, low storage/quota exhaustion.
+
+### Risks and Mitigations
+
+- iOS eviction risk: Use `persist()` and keep images compressed; advise users to install as PWA for better resilience.
+- HEIC compatibility: Convert to JPEG/WebP via canvas processing.
+- Performance: Use Web Worker for compression if main-thread jank observed (follow-up task if needed).
+- Memory leaks: Always `URL.revokeObjectURL` on unmount/update; reuse thumbnails.
+
+### Notes for Executor
+
+- Keep React context lean (IDs only). All blob work stays in `photoStore`.
+- Start with Mechanical form; replicate to others after validation.
+- Do not change service worker caching for this feature; blobs are local DB, not network.
+
+### Lessons (to be updated during execution)
+
+- Prefer IndexedDB for binary assets; keep UI state small, reference by ID.
+- Request storage persistence early; show clear user feedback when not granted.
+
+---
+
+## Current Status / Progress Tracking (Executor)
+
+- A1: photoStore implemented (`src/lib/photoStore.ts`) with compression, thumbnails, save/get/delete, persistence and usage APIs.
+- A2: `photoIds?: string[]` added to `SystemBase` and `ComplianceSystem` in `src/types/formTypes.ts`.
+- B1: `PhotoCapture.tsx` created with camera/gallery input, thumbnails, delete, persistence status, and usage display.
+- C1: Mechanical form integrated `PhotoCapture`; `photoIds` included in `addMechanicalSystem` payload.
+- C2: Electrical form integrated `PhotoCapture`; `photoIds` included in `addElectricalSystem` payload.
+- C3: Compliance form integrated `PhotoCapture`; `photoIds` included in `addComplianceSystem` payload.
+- C4: Not started (no thumbnail on system cards yet).
+- D1: Partially done — persistence requested and usage displayed; low-storage warning UI not implemented.
+
+## Executor's Feedback or Assistance Requests
+
+- Next recommended steps:
+  - C4: Add optional first-photo thumbnail to `systemCard` for quick visual context.
+  - D1: Implement a low-storage warning when `quota - usage < 50MB` (simple badge/toast in `PhotoCapture`).
