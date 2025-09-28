@@ -8,10 +8,11 @@ import PpmCostingSummary from "../components/ppmCostingSummary/ppmCostingSummary
 import CacheLoadingOverlay from "../components/CacheLoadingOverlay";
 import { useFormContext } from "@/hooks/useFormContext";
 import { useCacheManager } from "@/hooks/useCacheManager";
+import { generateAndDownloadPDF } from "@/lib/pdfGenerator";
 import { useState, useEffect } from "react";
 
 export default function Home() {
-  const { saveToLocalStorage } = useFormContext();
+  const { saveToLocalStorage, state } = useFormContext();
   const [isSaving, setIsSaving] = useState(false);
   const [showCacheOverlay, setShowCacheOverlay] = useState(false);
   const { isLoading, progress, cachePages } = useCacheManager();
@@ -28,10 +29,23 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [cachePages]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    saveToLocalStorage();
-    setIsSaving(false);
+    try {
+      // Save to localStorage (existing functionality)
+      saveToLocalStorage();
+      
+      // Generate and download PDF (new functionality)
+      await generateAndDownloadPDF(state);
+      
+      console.log('Form saved and PDF generated successfully');
+    } catch (error) {
+      console.error('Save or PDF generation failed:', error);
+      // Note: We don't show error to user here, but localStorage save still succeeded
+      // Could add user notification here in the future
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   const handleCacheComplete = () => {
@@ -53,7 +67,7 @@ export default function Home() {
         <PpmCostingSummary />
 
         <button className={styles.SaveButton} onClick={handleSave} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save"}
+          {isSaving ? "Saving & Generating PDF..." : "Save & Download PDF"}
         </button>
       </main>
 
