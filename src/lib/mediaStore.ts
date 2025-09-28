@@ -80,7 +80,15 @@ export async function computeContentHash(blob: Blob): Promise<string> {
 
 // OPFS helpers (Chromium)
 function hasOPFS(): boolean {
-    return typeof navigator !== 'undefined' && !!(navigator as unknown as { storage: { getDirectory: () => Promise<FileSystemDirectoryHandle> } }).storage && typeof (navigator as unknown as { storage: { getDirectory: () => Promise<FileSystemDirectoryHandle> } }).storage.getDirectory === 'function';
+    try {
+        return typeof navigator !== 'undefined' && 
+               'storage' in navigator && 
+               navigator.storage &&
+               'getDirectory' in navigator.storage &&
+               typeof (navigator.storage as { getDirectory?: () => Promise<FileSystemDirectoryHandle> }).getDirectory === 'function';
+    } catch {
+        return false;
+    }
 }
 
 async function opfsGetDir(path: string) {
@@ -94,14 +102,22 @@ async function opfsGetDir(path: string) {
 }
 
 async function opfsWriteFile(path: string, blob: Blob) {
-    const lastSlash = path.lastIndexOf('/');
-    const dirPath = path.slice(0, lastSlash);
-    const name = path.slice(lastSlash + 1);
-    const dir = await opfsGetDir(dirPath);
-    const handle = await dir.getFileHandle(name, { create: true });
-    const writable = await handle.createWritable();
-    await writable.write(blob);
-    await writable.close();
+    if (!hasOPFS()) {
+        throw new Error('OPFS not supported');
+    }
+    try {
+        const lastSlash = path.lastIndexOf('/');
+        const dirPath = path.slice(0, lastSlash);
+        const name = path.slice(lastSlash + 1);
+        const dir = await opfsGetDir(dirPath);
+        const handle = await dir.getFileHandle(name, { create: true });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+    } catch (error) {
+        console.warn('OPFS write failed, falling back to IndexedDB:', error);
+        throw error; // Re-throw to trigger IndexedDB fallback
+    }
 }
 
 async function opfsGetFile(path: string): Promise<Blob | null> {
@@ -181,13 +197,22 @@ export async function saveImage(args: {
     }
 
     // Store full image: OPFS or IDB
+    let useOPFS = false;
     if (hasOPFS()) {
-        const ext = mimeType.includes('avif') ? 'avif' : (mimeType.includes('webp') ? 'webp' : 'png');
-        await opfsWriteFile(`jbs-forms-media/images/${imageId}.${ext}`, imageBlob);
-        // Persist minimal meta in IDB to keep lookups fast
-        await idbSet(IMAGES_STORE, `${imageId}:opfs`, `jbs-forms-media/images/${imageId}.${ext}`);
-        await idbSet(IMAGES_STORE, `${imageId}:meta`, { sizeBytes: imageBlob.size });
-    } else {
+        try {
+            const ext = mimeType.includes('avif') ? 'avif' : (mimeType.includes('webp') ? 'webp' : 'png');
+            await opfsWriteFile(`jbs-forms-media/images/${imageId}.${ext}`, imageBlob);
+            // Persist minimal meta in IDB to keep lookups fast
+            await idbSet(IMAGES_STORE, `${imageId}:opfs`, `jbs-forms-media/images/${imageId}.${ext}`);
+            await idbSet(IMAGES_STORE, `${imageId}:meta`, { sizeBytes: imageBlob.size });
+            useOPFS = true;
+        } catch (error) {
+            console.warn('OPFS storage failed, falling back to IndexedDB:', error);
+            // Fall through to IndexedDB storage
+        }
+    }
+    
+    if (!useOPFS) {
         await idbSet(IMAGES_STORE, imageId, imageBlob);
         await idbSet(IMAGES_STORE, `${imageId}:meta`, { sizeBytes: imageBlob.size });
     }
