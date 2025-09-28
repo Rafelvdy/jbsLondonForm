@@ -3,14 +3,15 @@ import { Combobox } from "@/components/ui/combobox";
 import styles from "./page.module.css";
 import { useState } from "react";
 import { Input } from "@/components/input";
-
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useFormContext } from "@/hooks/useFormContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import PhotoCapture from "@/components/photos/PhotoCapture";
+import PhotoPickerInline from "@/components/photos/PhotoPickerInline";
+import type { PhotoMeta } from "@/types/formTypes";
+
 
 const ComplianceOtherSystemsForms = () => {
     const router = useRouter();
@@ -34,7 +35,7 @@ const ComplianceOtherSystemsForms = () => {
     ]
 
     const { addComplianceSystem } = useFormContext();
-    const [photoIds, setPhotoIds] = useState<string[]>([]);
+    const [photos, setPhotos] = useState<PhotoMeta[]>([]);
 
     const [formData, setFormData] = useState({
         complianceStatus: 'yes' as 'yes' | 'no',
@@ -47,8 +48,8 @@ const ComplianceOtherSystemsForms = () => {
             systemType: selectedSystem,
             systemLabel: systems.find(s => s.value === selectedSystem)?.label || '',
             ...formData,
-            photoIds,
-        })
+            photos: photos,
+        });
         // Navigate back using Next.js router - works reliably offline on all platforms
         router.replace("/");
     }
@@ -93,7 +94,12 @@ const ComplianceOtherSystemsForms = () => {
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
-                    <PhotoCapture initialPhotoIds={photoIds} onChange={setPhotoIds} />
+                    <PhotoPickerInline 
+                        value={photos}
+                        onChange={setPhotos}
+                        maxPhotos={10}
+                        maxBytesPerSystem={15 * 1024 * 1024}
+                    />
                     <button onClick={handleSave}>Save</button>
                 </div>
             )}

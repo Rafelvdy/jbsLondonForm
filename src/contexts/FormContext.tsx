@@ -1,6 +1,8 @@
 "use client";
-import { BuildingInfo, FormState, MechanicalSystem, ElectricalSystem, ComplianceSystem, PPMSummary } from "../types/formTypes";
+import { BuildingInfo, FormState, MechanicalSystem, ElectricalSystem, ComplianceSystem, PPMSummary, PhotoMeta } from "../types/formTypes";
 import { createContext } from "react";
+
+type SystemKind = 'mechanical' | 'electrical' | 'compliance';
 
 interface FormContextType {
     state: FormState;
@@ -15,6 +17,11 @@ interface FormContextType {
     updateComplianceSystem: (id: string, system: Partial<ComplianceSystem>) => void;
     deleteComplianceSystem: (id: string) => void;
     updatePPMSummary: (summary: Partial<PPMSummary>) => void;
+
+    // NEW: Photos
+    addSystemPhoto: (args: { systemKind: SystemKind; systemId: string; photo: PhotoMeta }) => void;
+    removeSystemPhoto: (args: { systemKind: SystemKind; systemId: string; photoId: string }) => void;
+
     saveToLocalStorage: () => void;
     loadFromLocalStorage: () => void;
     clearForm: () => void;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import { deletePhoto, ensurePersistence, estimateUsage, getPhoto, savePhoto } from '@/lib/photoStore';
 
 type PhotoCaptureProps = {
@@ -73,12 +74,13 @@ export default function PhotoCapture({ initialPhotoIds = [], onChange }: PhotoCa
         }, [photoIds]);
       
         useEffect(() => {
+          const currentObjectUrls = objectUrlsRef.current;
           return () => {
             // Revoke all URLs on unmount
-            for (const url of objectUrlsRef.current.values()) {
+            for (const url of currentObjectUrls.values()) {
               URL.revokeObjectURL(url);
             }
-            objectUrlsRef.current.clear();
+            currentObjectUrls.clear();
           };
         }, []);
       
@@ -136,7 +138,7 @@ export default function PhotoCapture({ initialPhotoIds = [], onChange }: PhotoCa
               <div className="flex flex-wrap gap-2">
                 {objectUrls.map(({ id, url }) => (
                   <div key={id} className="relative w-24 h-24 border rounded overflow-hidden">
-                    {url ? <img src={url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-100" />}
+                    {url ? <Image src={url} alt="" fill className="object-cover" /> : <div className="w-full h-full bg-gray-100" />}
                     <button
                       type="button"
                       onClick={() => handleDelete(id)}

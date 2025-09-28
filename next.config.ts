@@ -5,10 +5,12 @@ const nextConfig: NextConfig = {
   /* config options here */
 };
 
-export default withPWA({
+// PWA configuration
+const pwaConfig = {
   dest: "public",
-  register: true,
-  skipWaiting: true,
+  // Only register the service worker in production
+  register: process.env.NODE_ENV === "production",
+  skipWaiting: process.env.NODE_ENV === "production",
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -124,4 +126,9 @@ export default withPWA({
       }
     }
   ]
-})(nextConfig);
+};
+
+// Conditionally apply PWA wrapper only in production
+export default process.env.NODE_ENV === "production" 
+  ? withPWA(pwaConfig)(nextConfig)
+  : nextConfig;
