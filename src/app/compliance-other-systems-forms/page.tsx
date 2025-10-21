@@ -100,7 +100,7 @@ const ComplianceOtherSystemsForms = () => {
                         maxPhotos={10}
                         maxBytesPerSystem={15 * 1024 * 1024}
                     />
-                    <button onClick={handleSave}>Save</button>
+                    <button onClick={handleSave} className={styles.SaveButton}>Save</button>
                 </div>
             )}
         </main>

@@ -23,3 +23,7 @@
     cursor: pointer;
     border-radius: 10px;
 }
+
+.NoSystemsMessage {
+    margin-bottom: 20px;
+}

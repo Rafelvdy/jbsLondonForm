@@ -56,7 +56,7 @@ const MechanicalSystemForm = () => {
         // Navigate back using Next.js router - works reliably offline on all platforms
         router.replace("/");
     }
-
+ 
     return (
         <main className={styles.MechanicalSystemFormContainer}>
             <div className={styles.CancelContainer}>
@@ -119,7 +119,7 @@ const MechanicalSystemForm = () => {
                         maxPhotos={10}
                         maxBytesPerSystem={15 * 1024 * 1024}
                     />
-                    <button onClick={handleSave}>Save</button>
+                    <button onClick={handleSave} className={styles.SaveButton}>Save</button>
                 </div>
 
                 

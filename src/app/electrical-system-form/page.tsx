@@ -58,11 +58,11 @@ const ElectricalSystemForm = () => {
     }
 
     return (
-        <main className={styles.MechanicalSystemFormContainer}>
+        <main className={styles.ElectricalSystemFormContainer}>
             <div className={styles.CancelContainer}>
                 <Link href="/" className={styles.CancelButton}>X</Link>
             </div>
-            <h1 className={styles.MechanicalSystemFormTitle}>Electrical System Form</h1>
+            <h1 className={styles.ElectricalSystemFormTitle}>Electrical System Form</h1>
             <Combobox 
                 systems={systems}
                 value={selectedSystem}
@@ -71,7 +71,7 @@ const ElectricalSystemForm = () => {
                 onOpenChange={setIsComboboxOpen}
             />
             {hasSelection && (
-                <div className={styles.MechanicalSystemFormInputContainer}>
+                <div className={styles.ElectricalSystemFormInputContainer}>
                     <Input 
                     type="number"
                     placeholder="Quantity"
@@ -119,11 +119,11 @@ const ElectricalSystemForm = () => {
                         maxPhotos={10}
                         maxBytesPerSystem={15 * 1024 * 1024}
                     />
-                    <button onClick={handleSave}>Save</button>
+                    <button onClick={handleSave} className={styles.SaveButton}>Save</button>
                 </div>
             )}
         </main>
     )
 }
-
+ 
 export default ElectricalSystemForm;
