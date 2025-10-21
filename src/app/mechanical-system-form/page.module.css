@@ -6,12 +6,21 @@
     align-items: center;
     justify-content: flex-start;
     padding-top: 50px;
+    gap: 20px;
 }
 
 .MechanicalSystemFormTitle {
     font-size: 15px;
     font-weight: 600;
     margin-bottom: 20px;
+}
+
+.MechanicalSystemFormInputContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 20px;
 }
 
 .CancelContainer {

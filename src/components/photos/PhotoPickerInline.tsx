@@ -98,7 +98,7 @@ export default function PhotoPickerInline({ value, onChange, maxPhotos = 10, max
 
     return (
         <div>
-            <label style={{ display: 'block', marginBottom: 4 }}>Add photos</label>
+            {/* Hidden file input */}
             <input
                 ref={inputRef}
                 type="file"
@@ -107,9 +107,30 @@ export default function PhotoPickerInline({ value, onChange, maxPhotos = 10, max
                 multiple
                 onChange={(e) => onSelectFiles(e.target.files)}
                 disabled={busy}
+                style={{ display: 'none' }}
             />
-            {busy && <div>Processing photos...</div>}
-            {error && <div style={{ color: 'red' }}>{error}</div>}
+            
+            {/* Custom styled button */}
+            <button
+                onClick={() => inputRef.current?.click()}
+                disabled={busy}
+                style={{
+                    backgroundColor: '#000000',
+                    color: '#ffffff',
+                    padding: '8px 18px',
+                    borderRadius: '9999px',
+                    border: 'none',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    cursor: busy ? 'not-allowed' : 'pointer',
+                    opacity: busy ? 0.6 : 1,
+                    transition: 'opacity 0.2s',
+                }}
+            >
+                {busy ? 'Processing...' : 'add photo(s)'}
+            </button>
+            
+            {error && <div style={{ color: 'red', marginTop: '8px', fontSize: '14px' }}>{error}</div>}
 
             {value.length > 0 && (
                 <div style={{ marginTop: 8 }}>
